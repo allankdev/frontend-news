@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useState, useEffect, ReactNode, useContext } from "react";
+import { useRouter } from "next/navigation"; // ✅ Importa o router
 import { getUser, login as authLogin, logout as authLogout } from "@/lib/auth";
 
 interface User {
@@ -21,6 +22,7 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const router = useRouter(); // ✅ Instancie o router
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
@@ -33,14 +35,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           userData.streak = typeof userData.streak === "number" ? userData.streak : null; // 🔥 Evita erro
           setUser(userData);
           setIsAuthenticated(true);
+
+          // ✅ Redireciona automaticamente para a dashboard correta
+          if (userData.role === "admin") {
+            router.push("/admin");
+          } else {
+            router.push("/dashboard");
+          }
         } else {
-          authLogout();
-          setIsAuthenticated(false);
+          console.warn("⚠️ Nenhum usuário carregado, deslogando.");
+          logout();
         }
       } catch (error) {
         console.error("Erro ao carregar usuário:", error);
-        authLogout();
-        setIsAuthenticated(false);
+        logout();
       }
     }
 
@@ -55,6 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userData.streak = typeof userData.streak === "number" ? userData.streak : null; // 🔥 Corrige erro de streak
         setUser(userData);
         setIsAuthenticated(true);
+
+        // ✅ Redireciona para a dashboard correta após login
+        if (userData.role === "admin") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch (error) {
       console.error("Erro no login:", error);
@@ -66,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authLogout();
     setUser(null);
     setIsAuthenticated(false);
+    router.push("/login"); // ✅ Redireciona para login
   }
 
   return (

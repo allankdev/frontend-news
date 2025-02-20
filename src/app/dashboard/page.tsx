@@ -40,47 +40,51 @@ export default function UserDashboardPage() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">🔥 Sua Dashboard</h1>
-
-      {loading ? (
-        <p className="text-gray-500">Carregando...</p>
-      ) : (
-        streak !== null ? (
-          <>
-            <StreakCard streak={streak} />
-            {nextBadge && (
-              <>
-                <p className="mt-4 text-sm text-gray-600">
-                  🔜 Faltam {nextBadge - streak} dias para um novo badge!
-                </p>
-                <Progress value={(streak / nextBadge) * 100} />
-              </>
-            )}
-          </>
-        ) : (
-          <p className="text-gray-500">Nenhum streak encontrado.</p>
-        )
-      )}
-
-      {/* 🔥 Links para Histórico e Badges */}
-      <div className="mt-6 flex gap-4">
-        <Link href="/dashboard/history">
-          <Button className="bg-blue-500 text-white">📜 Histórico</Button>
-        </Link>
-        <Link href="/dashboard/badges">
-          <Button className="bg-yellow-500 text-white">🏅 Seus Badges</Button>
-        </Link>
-      </div>
-
-      {/* 🔥 Botão de Logout */}
-      <div className="mt-6">
-        <Button 
+    <div className="max-w-3xl mx-auto p-6">
+      {/* Cabeçalho com Logout */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">🔥 Sua Dashboard</h1>
+        <Button
           className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
           onClick={logout}
         >
           Sair
         </Button>
+      </div>
+
+      {/* Status do Streak */}
+      <div className="bg-white shadow-md rounded-lg p-6">
+        {loading ? (
+          <p className="text-gray-500">Carregando...</p>
+        ) : streak !== null ? (
+          <>
+            <StreakCard streak={streak} />
+            {nextBadge && (
+              <>
+                <p className="mt-4 text-sm text-gray-600 text-center">
+                  🔜 Faltam <strong>{nextBadge - streak} dias</strong> para um novo badge!
+                </p>
+                <Progress value={(streak / nextBadge) * 100} className="mt-2" />
+              </>
+            )}
+          </>
+        ) : (
+          <p className="text-gray-500 text-center">Nenhum streak encontrado.</p>
+        )}
+      </div>
+
+      {/* Links para Histórico e Badges */}
+      <div className="mt-6 flex justify-center gap-4">
+        <Link href="/dashboard/history">
+          <Button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+            📜 Histórico
+          </Button>
+        </Link>
+        <Link href="/dashboard/badges">
+          <Button className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">
+            🏅 Seus Badges
+          </Button>
+        </Link>
       </div>
     </div>
   );

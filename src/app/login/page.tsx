@@ -1,23 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth"; // 🚀 Novo sistema JWT
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth"; // 🚀 Usa nosso sistema JWT
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function LoginPage() {
-  const { login } = useAuth(); // 🚀 Usa nosso sistema JWT
+  const { login, user, isAuthenticated } = useAuth(); // 🚀 Agora pegamos o usuário autenticado
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    // Se o usuário já estiver autenticado, redireciona para a dashboard correta
+    if (isAuthenticated && user) {
+      const dashboardPath = user.role === "admin" ? "/admin" : "/dashboard";
+      router.push(dashboardPath);
+    }
+  }, [isAuthenticated, user, router]);
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     try {
       await login(email, password);
-      router.push("/dashboard");
+      // 🔥 Pegamos os dados do usuário após o login para direcionar corretamente
+      const dashboardPath = user?.role === "admin" ? "/admin" : "/dashboard";
+      router.push(dashboardPath);
     } catch (err) {
       setError("Credenciais inválidas");
     }
