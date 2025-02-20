@@ -1,20 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth"; // 🚀 Usa nosso sistema JWT
+import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { motion } from "framer-motion";
 
 export default function LoginPage() {
-  const { login, user, isAuthenticated } = useAuth(); // 🚀 Agora pegamos o usuário autenticado
+  const { login, user, isAuthenticated } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Se o usuário já estiver autenticado, redireciona para a dashboard correta
     if (isAuthenticated && user) {
       const dashboardPath = user.role === "admin" ? "/admin" : "/dashboard";
       router.push(dashboardPath);
@@ -25,7 +25,6 @@ export default function LoginPage() {
     event.preventDefault();
     try {
       await login(email, password);
-      // 🔥 Pegamos os dados do usuário após o login para direcionar corretamente
       const dashboardPath = user?.role === "admin" ? "/admin" : "/dashboard";
       router.push(dashboardPath);
     } catch (err) {
@@ -34,28 +33,56 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <form onSubmit={handleSubmit} className="p-6 bg-white rounded shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-4">Login</h2>
-        {error && <p className="text-red-500 mb-2">{error}</p>}
-        <Input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full border p-2 mb-2 rounded"
-        />
-        <Input
-          type="password"
-          placeholder="Senha"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full border p-2 mb-4 rounded"
-        />
-        <Button type="submit" className="w-full bg-blue-500 text-white p-2 rounded">
-          Entrar
-        </Button>
-      </form>
+    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-white p-8 rounded-xl shadow-lg w-96"
+      >
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-6">🔐 Login</h2>
+
+        {error && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-red-500 text-sm text-center mb-4"
+          >
+            {error}
+          </motion.p>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="text-gray-700 font-semibold">📧 Email</label>
+            <Input
+              type="email"
+              placeholder="Digite seu email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+            />
+          </div>
+
+          <div>
+            <label className="text-gray-700 font-semibold">🔑 Senha</label>
+            <Input
+              type="password"
+              placeholder="Digite sua senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg text-lg font-semibold transition duration-300"
+          >
+            Entrar
+          </Button>
+        </form>
+      </motion.div>
     </div>
   );
 }

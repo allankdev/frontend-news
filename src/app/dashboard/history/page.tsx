@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/providers/AuthProvider";
-import { Table } from "@/components/ui/table";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import dayjs from "dayjs";
 
 export default function HistoryPage() {
   const { user } = useAuth();
-  const [history, setHistory] = useState<any[]>([]); // 🔥 Inicia como array vazio
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -20,7 +20,14 @@ export default function HistoryPage() {
   const fetchHistory = async () => {
     try {
       const response = await api.get("/readers/my-newsletters");
-      setHistory(Array.isArray(response.data) ? response.data : []); // 🔥 Evita erro se a API não retornar array
+      if (response.data?.newsletters) {
+        setHistory(
+          response.data.newsletters.map((news) => ({
+            date: new Date(news.openedAt),
+            title: news.resourceId,
+          }))
+        );
+      }
     } catch (error) {
       console.error("Erro ao buscar histórico", error);
       setError("Erro ao carregar histórico.");
@@ -30,39 +37,46 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">📜 Seu Histórico de Leituras</h1>
-
-      {loading ? (
-        <p className="text-gray-500">Carregando...</p>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
-      ) : history.length > 0 ? (
-        <Table>
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Newsletter</th>
-            </tr>
-          </thead>
-          <tbody>
-            {history.map((item, index) => (
-              <tr key={index}>
-                <td>{new Date(item.date).toLocaleDateString()}</td>
-                <td>{item.title}</td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      ) : (
-        <p className="text-gray-500">Nenhuma leitura encontrada.</p>
-      )}
-
-      <div className="mt-6">
+    <div className="max-w-3xl mx-auto p-6">
+      {/* Cabeçalho */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-extrabold text-gray-900">📜 Histórico de Leituras</h1>
         <Link href="/dashboard">
-          <Button className="bg-gray-500 text-white">Voltar</Button>
+          <Button className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg transition duration-300">
+            ← Voltar
+          </Button>
         </Link>
       </div>
+
+      {/* Contador de leituras */}
+      <div className="p-5 bg-gray-100 border border-gray-300 rounded-xl text-center mb-6 shadow-lg">
+        <h2 className="text-lg font-bold text-gray-900">📊 Total de Leituras</h2>
+        <p className="text-3xl font-bold text-gray-900">{history.length}</p>
+      </div>
+
+      {/* Status de Carregamento e Erro */}
+      {loading ? (
+        <p className="text-gray-500 text-center text-lg animate-pulse">Carregando histórico...</p>
+      ) : error ? (
+        <p className="text-red-500 text-center text-lg">{error}</p>
+      ) : history.length > 0 ? (
+        <>
+          {/* Lista de leituras em formato de cards */}
+          <div className="grid grid-cols-1 gap-6">
+            {history.map((item, index) => (
+              <div
+                key={index}
+                className="p-5 bg-white border border-gray-200 rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                <p className="text-lg font-semibold text-gray-900">{item.title}</p>
+                <p className="text-sm text-gray-600">📅 {dayjs(item.date).format("DD/MM/YYYY")}</p>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className="text-gray-500 text-center text-lg">Nenhuma leitura encontrada.</p>
+      )}
     </div>
   );
 }
