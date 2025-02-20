@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth"; // 🚀 Novo sistema JWT
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login } = useAuth(); // 🚀 Usa nosso sistema JWT
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

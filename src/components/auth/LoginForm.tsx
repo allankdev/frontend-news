@@ -1,27 +1,39 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    const result = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
+    try {
+      const response = await api.post("/auth/login", {
+        email,
+        password,
+      });
 
-    if (result?.error) {
+      const { token, role } = response.data;
+
+      // 🔥 Salva o token e a role no localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+
+      // 🔥 Redireciona com base na role
+      if (role === "admin") {
+        router.push("/dashboard");
+      } else {
+        router.push("/streaks");
+      }
+    } catch (err) {
       setError("Credenciais inválidas!");
-    } else {
-      window.location.href = "/dashboard"; // 🔥 Redireciona após login
     }
   };
 

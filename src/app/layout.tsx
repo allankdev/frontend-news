@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
-import "./globals.css"; // ✅ Caminho correto para dentro de `app`
 import { AuthProvider } from "@/providers/AuthProvider";
+import "./globals.css"; // ✅ Certifique-se que este caminho está correto
+
+
+export const metadata: Metadata = {
+  title: "The News - Gamificação de Newsletters",
+  description: "Acompanhe seus streaks e conquistas ao abrir nossas newsletters!",
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

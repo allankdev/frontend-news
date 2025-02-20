@@ -9,7 +9,8 @@ export async function login(email: string, password: string) {
     console.log("✅ Resposta do backend:", response.data); // 🔥 Debug
 
     if (response.data?.token) {
-      localStorage.setItem("token", response.data.token); // ✅ Agora salvamos corretamente o token
+      localStorage.setItem("token", response.data.token); 
+      localStorage.setItem("role", response.data.role); // ✅ Agora salvamos corretamente o token
       return response.data;
     }
 

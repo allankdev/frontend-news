@@ -1,51 +1,87 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth"; // 🚀 Substituindo NextAuth por JWT
 import { api } from "@/lib/api";
+import { StreakCard } from "@/components/streaks/StreakCard";
+import { useAuth } from "@/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import Link from "next/link";
 
-export default function DashboardPage() {
-  const { user, logout } = useAuth(); // 🚀 Agora usamos nosso sistema JWT
-  const router = useRouter();
-  const [stats, setStats] = useState<any>(null);
+export default function UserDashboardPage() {
+  const { user, logout } = useAuth();
+  const [streak, setStreak] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [nextBadge, setNextBadge] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!user) {
-      router.push("/login"); // 🔥 Redireciona para login se não estiver autenticado
-    } else {
-      fetchStats();
-    }
-  }, [user, router]);
+    fetchStreak();
+  }, []);
 
-  const fetchStats = async () => {
+  const fetchStreak = async () => {
     try {
-      const response = await api.get("/admin/stats");
-      setStats(response.data);
+      const response = await api.get("/streaks/me");
+      if (response.data && typeof response.data.streak === "number") {
+        setStreak(response.data.streak);
+        setNextBadge(getNextBadge(response.data.streak));
+      } else {
+        setStreak(null);
+      }
     } catch (error) {
-      console.error("Erro ao buscar estatísticas", error);
+      console.error("Erro ao buscar streak", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!user) return null; // 🔥 Evita renderizar o conteúdo antes da autenticação
+  const getNextBadge = (streak: number) => {
+    const badgeMilestones = [3, 7, 14, 30];
+    return badgeMilestones.find((milestone) => milestone > streak) || null;
+  };
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold">Dashboard Administrativo</h1>
+      <h1 className="text-2xl font-bold">🔥 Sua Dashboard</h1>
 
-      {stats ? (
-        <div className="mt-4">
-          <p>📈 Total de leituras: {stats.totalReads}</p>
-          <p>🔥 Top usuário: {stats.topUser}</p>
-        </div>
+      {loading ? (
+        <p className="text-gray-500">Carregando...</p>
       ) : (
-        <p className="text-gray-500">Carregando estatísticas...</p>
+        streak !== null ? (
+          <>
+            <StreakCard streak={streak} />
+            {nextBadge && (
+              <>
+                <p className="mt-4 text-sm text-gray-600">
+                  🔜 Faltam {nextBadge - streak} dias para um novo badge!
+                </p>
+                <Progress value={(streak / nextBadge) * 100} />
+              </>
+            )}
+          </>
+        ) : (
+          <p className="text-gray-500">Nenhum streak encontrado.</p>
+        )
       )}
 
-      <Button className="mt-6" onClick={logout}>
-        Sair
-      </Button>
+      {/* 🔥 Links para Histórico e Badges */}
+      <div className="mt-6 flex gap-4">
+        <Link href="/dashboard/history">
+          <Button className="bg-blue-500 text-white">📜 Histórico</Button>
+        </Link>
+        <Link href="/dashboard/badges">
+          <Button className="bg-yellow-500 text-white">🏅 Seus Badges</Button>
+        </Link>
+      </div>
+
+      {/* 🔥 Botão de Logout */}
+      <div className="mt-6">
+        <Button 
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+          onClick={logout}
+        >
+          Sair
+        </Button>
+      </div>
     </div>
   );
 }
