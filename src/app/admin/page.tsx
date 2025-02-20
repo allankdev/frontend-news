@@ -15,14 +15,25 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Estados dos filtros
+  const [selectedPeriod, setSelectedPeriod] = useState("30");
+  const [selectedNewsletter, setSelectedNewsletter] = useState("");
+  const [selectedStreakStatus, setSelectedStreakStatus] = useState("");
+
   useEffect(() => {
     fetchRanking();
     fetchStats();
-  }, []);
+  }, [selectedPeriod, selectedNewsletter, selectedStreakStatus]);
 
   const fetchRanking = async () => {
     try {
-      const response = await api.get("/admin/ranking");
+      const response = await api.get("/admin/ranking", {
+        params: {
+          period: selectedPeriod,
+          newsletter: selectedNewsletter,
+          streakStatus: selectedStreakStatus,
+        },
+      });
       setRanking(response.data || []);
     } catch (error) {
       console.error("Erro ao buscar ranking", error);
@@ -32,19 +43,24 @@ export default function AdminDashboardPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await api.get("/admin/stats");
+      const response = await api.get("/admin/stats", {
+        params: {
+          period: selectedPeriod,
+          newsletter: selectedNewsletter,
+        },
+      });
       setStats(response.data || {});
 
-      // 🔥 Se a API não retornar um histórico de daily_open_rate, criamos um modelo baseado em totalNewslettersOpened
-      if (response.data?.totalNewslettersOpened) {
+      if (response.data?.daily_open_rate) {
+        setChartData(response.data.daily_open_rate);
+      } else if (response.data?.totalNewslettersOpened) {
         const totalOpens = response.data.totalNewslettersOpened;
-        const days = 7; // Simular dados para os últimos 7 dias
-        const averageOpens = Math.max(1, Math.floor(totalOpens / days)); // Evita dividir por 0
+        const days = parseInt(selectedPeriod, 10) || 30;
+        const averageOpens = Math.max(1, Math.floor(totalOpens / days));
 
-        // Gerar uma distribuição fictícia dos últimos 7 dias
         const simulatedData = Array.from({ length: days }).map((_, i) => ({
           date: dayjs().subtract(days - i, "day").format("DD/MM"),
-          opens: Math.max(1, averageOpens + Math.floor(Math.random() * 3)), // Pequena variação aleatória
+          opens: Math.max(1, averageOpens + Math.floor(Math.random() * 3)),
         }));
 
         setChartData(simulatedData);
@@ -60,44 +76,88 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
       {/* Cabeçalho com botão de logout */}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-extrabold text-gray-900">📊 Dashboard Administrativo</h1>
-        <Button
-          onClick={logout}
-          className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg transition duration-300"
-        >
+        <Button onClick={logout} className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg">
           Sair
         </Button>
       </div>
 
-      {/* Estatísticas gerais */}
-      {loading ? (
-        <p className="text-gray-500 text-center text-lg animate-pulse">Carregando...</p>
-      ) : error ? (
-        <p className="text-red-500 text-center text-lg">{error}</p>
-      ) : stats ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="p-6 bg-white border border-gray-200 rounded-xl text-center shadow-lg">
-            <h2 className="text-lg font-bold text-gray-900">👥 Usuários Ativos</h2>
-            <p className="text-3xl font-semibold text-gray-900">{stats.totalUsers || 0}</p>
-          </div>
-          <div className="p-6 bg-white border border-gray-200 rounded-xl text-center shadow-lg">
-            <h2 className="text-lg font-bold text-gray-900">🔥 Maior Streak</h2>
-            <p className="text-xl font-semibold text-gray-900">
-              {stats?.topUser?.streak ? `${stats.topUser.streak} dias` : "Nenhum streak registrado"}
-            </p>
-            <p className="text-sm text-gray-600">{stats?.topUser?.email || "Sem dados"}</p>
-          </div>
-          <div className="p-6 bg-white border border-gray-200 rounded-xl text-center shadow-lg">
-            <h2 className="text-lg font-bold text-gray-900">📩 Total de Leituras</h2>
-            <p className="text-3xl font-semibold text-gray-900">{stats.totalNewslettersOpened || 0}</p>
-          </div>
+      {/* Filtros */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-white p-4 shadow-md rounded-lg">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">📅 Período</label>
+          <select
+            className="w-full p-2 border border-gray-300 rounded-md"
+            value={selectedPeriod}
+            onChange={(e) => setSelectedPeriod(e.target.value)}
+          >
+            <option value="7">Últimos 7 dias</option>
+            <option value="30">Últimos 30 dias</option>
+            <option value="90">Últimos 90 dias</option>
+          </select>
         </div>
-      ) : null}
 
-      {/* Gráfico de Evolução das Aberturas */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">📰 Newsletter</label>
+          <input
+            type="text"
+            className="w-full p-2 border border-gray-300 rounded-md"
+            placeholder="Digite o nome da newsletter..."
+            value={selectedNewsletter}
+            onChange={(e) => setSelectedNewsletter(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">🔥 Status do Streak</label>
+          <select
+            className="w-full p-2 border border-gray-300 rounded-md"
+            value={selectedStreakStatus}
+            onChange={(e) => setSelectedStreakStatus(e.target.value)}
+          >
+            <option value="">Todos</option>
+            <option value="active">Ativo</option>
+            <option value="lost">Perdido</option>
+          </select>
+        </div>
+
+        <div className="col-span-3 flex justify-end">
+          <Button
+            onClick={() => {
+              setSelectedPeriod("30");
+              setSelectedNewsletter("");
+              setSelectedStreakStatus("");
+            }}
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+          >
+            Resetar Filtros
+          </Button>
+        </div>
+      </div>
+
+      {/* Estatísticas Gerais */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="p-6 bg-white border border-gray-200 rounded-xl text-center shadow-lg">
+          <h2 className="text-lg font-bold text-gray-900">👥 Usuários Ativos</h2>
+          <p className="text-3xl font-semibold text-gray-900">{stats?.totalUsers || 0}</p>
+        </div>
+        <div className="p-6 bg-white border border-gray-200 rounded-xl text-center shadow-lg">
+          <h2 className="text-lg font-bold text-gray-900">🔥 Maior Streak</h2>
+          <p className="text-xl font-semibold text-gray-900">
+            {stats?.topUser?.streak ? `${stats.topUser.streak} dias` : "Nenhum streak registrado"}
+          </p>
+          <p className="text-sm text-gray-600">{stats?.topUser?.email || "Sem dados"}</p>
+        </div>
+        <div className="p-6 bg-white border border-gray-200 rounded-xl text-center shadow-lg">
+          <h2 className="text-lg font-bold text-gray-900">📩 Total de Leituras</h2>
+          <p className="text-3xl font-semibold text-gray-900">{stats?.totalNewslettersOpened || 0}</p>
+        </div>
+      </div>
+
+      {/* 📈 Gráfico de Evolução das Aberturas */}
       <div className="bg-white shadow-md rounded-lg p-6 mb-8">
         <h2 className="text-lg font-bold mb-4 text-gray-900">📈 Evolução das Aberturas</h2>
         {chartData.length > 0 ? (
@@ -115,8 +175,8 @@ export default function AdminDashboardPage() {
         )}
       </div>
 
-      {/* Ranking de Leitores */}
-      <div className="bg-white shadow-md rounded-lg p-6">
+    {/* Ranking de Leitores */}
+    <div className="bg-white shadow-md rounded-lg p-6">
         <h2 className="text-lg font-bold mb-4 text-gray-900">🏆 Ranking de Leitores</h2>
         <table className="w-full border-collapse">
           <thead>
@@ -129,27 +189,20 @@ export default function AdminDashboardPage() {
           <tbody>
             {ranking.length > 0 ? (
               ranking.map((reader, index) => (
-                <tr
-                  key={reader.id}
-                  className={`border-t hover:bg-gray-50 transition ${
-                    index === 0 ? "font-bold text-yellow-600" : ""
-                  }`}
-                >
+                <tr key={reader.id} className="border-t hover:bg-gray-50 transition">
                   <td className="p-3">{index + 1}</td>
                   <td className="p-3">{reader.email}</td>
-                  <td className="p-3 font-bold text-orange-600">{reader.streak} dias 🔥</td>
+                  <td className="p-3 font-bold text-orange-600">{reader.streak} dias</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={3} className="p-3 text-center text-gray-500">
-                  Nenhum dado encontrado.
-                </td>
+                <td colSpan={3} className="p-3 text-center text-gray-500">Nenhum dado encontrado.</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-    </div>
+    </div> 
   );
 }

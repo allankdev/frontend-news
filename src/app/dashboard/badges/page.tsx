@@ -7,9 +7,15 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import dayjs from "dayjs";
 
+interface Badge {
+  id: string;
+  name: string;
+  earnedAt: string;
+}
+
 export default function BadgesPage() {
   const { user } = useAuth();
-  const [badges, setBadges] = useState([]);
+  const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -20,18 +26,22 @@ export default function BadgesPage() {
   const fetchBadges = async () => {
     try {
       const response = await api.get("/badges/mine");
+
       if (Array.isArray(response.data)) {
         setBadges(
           response.data.map((badge) => ({
-            id: badge.id,
-            name: badge.badgeType,
-            earnedAt: dayjs(badge.earnedAt).format("DD/MM/YYYY"),
+            id: badge.id || "desconhecido",
+            name: badge.badgeType || "Sem nome",
+            earnedAt: badge.earnedAt ? dayjs(badge.earnedAt).format("DD/MM/YYYY") : "Data desconhecida",
           }))
         );
+      } else {
+        console.error("Erro: `prêmios` não é um array válido!", response.data);
+        setError("Erro ao carregar seus prêmios. Dados inválidos.");
       }
     } catch (error) {
-      console.error("Erro ao buscar badges", error);
-      setError("Erro ao carregar seus badges.");
+      console.error("Erro ao buscar prêmios", error);
+      setError("Erro ao carregar seus prêmios.");
     } finally {
       setLoading(false);
     }
@@ -41,7 +51,7 @@ export default function BadgesPage() {
     <div className="max-w-3xl mx-auto p-6">
       {/* Cabeçalho */}
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900">🏅 Seus Badges</h1>
+        <h1 className="text-3xl font-extrabold text-gray-900">Seus prêmios 🏅</h1>
         <Link href="/dashboard">
           <Button className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg transition duration-300">
             ← Voltar
