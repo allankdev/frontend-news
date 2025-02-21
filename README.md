@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📩 The News - Gamificação de Newsletters
 
-## Getting Started
+## 🚀 Sobre o Projeto
+O **The News** é uma plataforma de **gamificação para newsletters**, incentivando o engajamento dos leitores através de **streaks, badges e rankings**. Inspirado no **Duolingo**, o sistema permite que os usuários acompanhem seu progresso e conquistas enquanto leem as newsletters enviadas regularmente.
 
-First, run the development server:
+## 🎯 Funcionalidades
+### ✅ **Área do Usuário**
+- **Página Inicial** com introdução ao projeto e botão para login
+- **Dashboard do Usuário** exibindo:
+  - Streak atual (quantos dias consecutivos abriu a newsletter)
+  - Histórico de leituras e progresso
+  - Mensagens motivacionais para incentivar o usuário
+  - Conquistas e Badges
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### ✅ **Dashboard Administrativo**
+- Visualização de **métricas de engajamento geral**
+- **Ranking** dos leitores mais engajados
+- **Filtros avançados** por período, newsletter e status de streak
+- **Gráficos de padrões de engajamento**
+
+### ✅ **Regras de Streak e Badges**
+- Streak aumenta **+1 a cada dia consecutivo** que o usuário abrir uma newsletter
+- Se o usuário perder um dia, o streak é **zerado** (exceto domingos)
+- Badges são concedidos ao atingir **3, 7, 14, 30 dias de streak**
+
+## 🛠 Tecnologias Utilizadas
+- **Frontend**: Next.js, Tailwind CSS, shadcn/ui, Recharts
+- **Backend**: NestJS, Prisma ORM, PostgreSQL
+- **Autenticação**: JWT
+- **Webhook**: Beehiiv API para rastrear aberturas de emails
+
+## 🏗 Estrutura do Projeto
+```
+📂 frontend-news
+ ├── public/               # Arquivos estáticos (logo, favicon, etc.)
+ ├── src/
+ │   ├── app/
+ │   │   ├── layout.tsx   # Layout global
+ │   │   ├── page.tsx     # Página inicial
+ │   │   ├── login/
+ │   │   ├── dashboard/
+ │   │   ├── admin/
+ ├        ── public/
+ │   ├── components/      # Componentes reutilizáveis
+ │   ├── lib/             # Configuração de API
+ │   ├── providers/       # Contexto de autenticação
+ │   ├── hooks/           # Hooks personalizados
+ ├── .env.local           # Variáveis de ambiente
+ ├── package.json         # Dependências do projeto
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🔧 Como Rodar o Projeto
+### **1️⃣ Configurar o Backend**
+```sh
+cd backend-news
+npm install
+npm run start
+```
+Certifique-se de que o backend está rodando em **http://localhost:3000**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### **2️⃣ Rodar o Frontend**
+```sh
+cd frontend-news
+npm install
+npm run dev
+```
+O frontend rodará em **http://localhost:4000**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🌍 Variáveis de Ambiente (.env.local)
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3000/api
+NEXTAUTH_URL=http://localhost:4000
+JWT_SECRET=super_secret_key
+```
 
-## Learn More
+## ✅ Testes Realizados
+- **Autenticação e redirecionamento correto de usuários**
+- **Incremento e reset de streaks conforme regras**
+- **Recebimento de dados via webhook do Beehiiv**
+- **Exibição correta dos badges e ranking**
+- **Responsividade e experiência do usuário**
 
-To learn more about Next.js, take a look at the following resources:
+## 📽 Demonstração
+📌 **https://youtu.be/rob-d3wvmdk?si=nY08d9bQTiyick2o**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔍 Melhorias Futuras
+- Implementar **notificações push** para lembrar os usuários de abrir a newsletter
+- Criar **mecânica de desafios e missões diárias**
+- Permitir **customização de avatares e perfis**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📦 Entrega
+- ✅ Código-fonte no **GitHub (repositório privado)**
+- ✅ Demonstração funcional **(vídeo ou link hospedado)**
+- ✅ Relatório de análise técnica
 
-## Deploy on Vercel
+---
+Feito com ❤️ por **[Allan Kelven]** 🚀
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
