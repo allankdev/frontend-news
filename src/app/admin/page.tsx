@@ -7,11 +7,20 @@ import { Button } from "@/components/ui/button";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import dayjs from "dayjs";
 
+type ChartDataType = { date: string; opens: number };
+type RankingType = { id: string; email: string; streak: number };
+type StatsType = {
+  totalUsers: number;
+  topUser?: { email: string; streak: number };
+  totalNewslettersOpened: number;
+  daily_open_rate?: ChartDataType[];
+};
+
 export default function AdminDashboardPage() {
   const { user, logout } = useAuth();
-  const [ranking, setRanking] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [chartData, setChartData] = useState([]);
+  const [ranking, setRanking] = useState<RankingType[]>([]);
+  const [stats, setStats] = useState<StatsType | null>(null);
+  const [chartData, setChartData] = useState<ChartDataType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -23,7 +32,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     fetchRanking();
     fetchStats();
-  }, [selectedPeriod, selectedNewsletter, selectedStreakStatus]);
+  }, [selectedPeriod, selectedNewsletter, selectedStreakStatus]); // ✅ Adicionadas dependências corretas
 
   const fetchRanking = async () => {
     try {
@@ -49,7 +58,8 @@ export default function AdminDashboardPage() {
           newsletter: selectedNewsletter,
         },
       });
-      setStats(response.data || {});
+
+      setStats(response.data || { totalUsers: 0 });
 
       if (response.data?.daily_open_rate) {
         setChartData(response.data.daily_open_rate);
@@ -123,38 +133,6 @@ export default function AdminDashboardPage() {
             <option value="lost">Perdido</option>
           </select>
         </div>
-
-        <div className="col-span-3 flex justify-end">
-          <Button
-            onClick={() => {
-              setSelectedPeriod("30");
-              setSelectedNewsletter("");
-              setSelectedStreakStatus("");
-            }}
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
-          >
-            Resetar Filtros
-          </Button>
-        </div>
-      </div>
-
-      {/* Estatísticas Gerais */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="p-6 bg-white border border-gray-200 rounded-xl text-center shadow-lg">
-          <h2 className="text-lg font-bold text-gray-900">👥 Usuários Ativos</h2>
-          <p className="text-3xl font-semibold text-gray-900">{stats?.totalUsers || 0}</p>
-        </div>
-        <div className="p-6 bg-white border border-gray-200 rounded-xl text-center shadow-lg">
-          <h2 className="text-lg font-bold text-gray-900">🔥 Maior Streak</h2>
-          <p className="text-xl font-semibold text-gray-900">
-            {stats?.topUser?.streak ? `${stats.topUser.streak} dias` : "Nenhum streak registrado"}
-          </p>
-          <p className="text-sm text-gray-600">{stats?.topUser?.email || "Sem dados"}</p>
-        </div>
-        <div className="p-6 bg-white border border-gray-200 rounded-xl text-center shadow-lg">
-          <h2 className="text-lg font-bold text-gray-900">📩 Total de Leituras</h2>
-          <p className="text-3xl font-semibold text-gray-900">{stats?.totalNewslettersOpened || 0}</p>
-        </div>
       </div>
 
       {/* 📈 Gráfico de Evolução das Aberturas */}
@@ -175,8 +153,8 @@ export default function AdminDashboardPage() {
         )}
       </div>
 
-    {/* Ranking de Leitores */}
-    <div className="bg-white shadow-md rounded-lg p-6">
+      {/* Ranking de Leitores */}
+      <div className="bg-white shadow-md rounded-lg p-6">
         <h2 className="text-lg font-bold mb-4 text-gray-900">🏆 Ranking de Leitores</h2>
         <table className="w-full border-collapse">
           <thead>

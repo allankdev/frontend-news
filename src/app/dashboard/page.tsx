@@ -13,21 +13,23 @@ import Link from "next/link";
 
 dayjs.extend(relativeTime);
 
+type ChartDataType = { date: string; opens: number };
+
 export default function UserDashboardPage() {
   const { user, logout } = useAuth();
   const [streak, setStreak] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [nextBadge, setNextBadge] = useState<number | null>(null);
-  const [chartData, setChartData] = useState([]);
+  const [chartData, setChartData] = useState<ChartDataType[]>([]);
   const [timeLeft, setTimeLeft] = useState<string>("");
 
   useEffect(() => {
     fetchStreak();
-  }, []);
+  }, []); 
 
   useEffect(() => {
     calculateTimeLeft();
-    const interval = setInterval(calculateTimeLeft, 60000); // Atualiza a cada minuto
+    const interval = setInterval(calculateTimeLeft, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -37,17 +39,15 @@ export default function UserDashboardPage() {
       if (response.data && typeof response.data.streak === "number") {
         setStreak(response.data.streak);
         setNextBadge(getNextBadge(response.data.streak));
-  
-        // Se a API enviar um histórico de streaks, usamos os dados reais no gráfico
+
         if (response.data.history) {
           setChartData(
-            response.data.history.map((entry) => ({
+            response.data.history.map((entry: { date: string; streak: number }) => ({
               date: dayjs(entry.date).format("DD/MM"),
               opens: entry.streak,
             }))
           );
         } else {
-          // Se não houver histórico, mantém os dados antigos
           setChartData([
             { date: "Últimos 7 dias", opens: response.data.streak - 3 },
             { date: "Últimos 30 dias", opens: response.data.streak },
@@ -98,57 +98,10 @@ export default function UserDashboardPage() {
           >
             <h2 className="text-lg font-bold text-gray-900">🔥 Streak Atual</h2>
             <p className="text-4xl font-semibold text-gray-900">{streak} dias</p>
-            <p className="mt-3 text-gray-700 font-medium">Mantenha o ritmo! Pequenos hábitos criam grandes resultados! 🚀</p>
-            {nextBadge && (
-              <>
-                <p className="mt-2 text-sm text-gray-600">
-                  🔜 Faltam <span className="font-bold">{nextBadge - streak}</span> dias para um novo prêmio!
-                </p>
-                <Progress value={(streak / nextBadge) * 100} className="mt-2" />
-              </>
-            )}
           </motion.div>
-
-          <div className="p-5 bg-gray-100 border border-gray-300 rounded-xl text-center mt-4 shadow-md">
-            <h2 className="text-lg font-bold text-gray-900">🎯 Meta Diária</h2>
-            <p className="text-sm text-gray-700">
-              Você tem <span className="font-bold">{timeLeft}</span> para manter seu streak! Continue firme, a consistência leva à maestria! 💪
-            </p>
-          </div>
-
-          <div className="mt-6 flex gap-4">
-            <Link href="/dashboard/history">
-              <Button className="bg-gray-700 hover:bg-gray-900 text-white px-6 py-3 rounded-lg transition duration-300">
-                📜 Histórico
-              </Button>
-            </Link>
-            <Link href="/dashboard/badges">
-              <Button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition duration-300">
-                🏅 Seus prêmios
-              </Button>
-            </Link>
-          </div>
-
-          <div className="bg-white shadow-md rounded-lg p-6 mt-6">
-            <h2 className="text-lg font-bold mb-4 text-gray-900">📈 Evolução do Streak</h2>
-            <p className="text-gray-700 mb-2">Cada dia conta! Continue avançando e você verá grandes conquistas! 🌟</p>
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="opens" stroke="#2563eb" strokeWidth={3} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-gray-500 text-center">Nenhum dado disponível.</p>
-            )}
-          </div>
         </>
       ) : (
-        <p className="text-gray-500 text-center">Nenhum streak encontrado. Todo grande caminho começa com um primeiro passo! 🚶‍♂️</p>
+        <p className="text-gray-500 text-center">Nenhum streak encontrado.</p>
       )}
     </div>
   );

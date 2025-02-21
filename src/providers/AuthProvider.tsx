@@ -15,7 +15,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  loading: boolean; // Adicionado para evitar redirecionamentos antes do carregamento
+  loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [loading, setLoading] = useState(true); // 🔥 Novo estado para evitar redirecionamentos antes da verificação
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadUser() {
@@ -38,27 +38,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           userData.streak = typeof userData.streak === "number" ? userData.streak : null;
           setUser(userData);
           setIsAuthenticated(true);
-
-          // ✅ Redireciona usuários somente se eles já estiverem autenticados e não estiverem na tela inicial
-          if (pathname !== "/" && pathname !== "/login") {
-            if (userData.role === "admin") {
-              router.push("/admin");
-            } else {
-              router.push("/dashboard");
-            }
-          }
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error("Erro ao carregar usuário:", error);
         setUser(null);
         setIsAuthenticated(false);
       } finally {
-        setLoading(false); // 🔥 Agora marcamos o carregamento como finalizado
+        setLoading(false);
       }
     }
 
     loadUser();
-  }, []);
+  }, []); // ✅ Sem dependências desnecessárias
+
+  useEffect(() => {
+    if (!loading && user) {
+      if (pathname !== "/" && pathname !== "/login") {
+        if (user.role === "admin") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
+      }
+    }
+  }, [pathname, router, loading, user]); // ✅ Corrigido o ESLint (Adicionadas dependências corretas)
 
   async function login(email: string, password: string) {
     try {
@@ -69,7 +75,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(userData);
         setIsAuthenticated(true);
 
-        // ✅ Redireciona corretamente após login
         if (userData.role === "admin") {
           router.push("/admin");
         } else {
