@@ -9,7 +9,8 @@ export async function login(email: string, password: string) {
     console.log("✅ Resposta do backend:", response.data); // 🔥 Debug
 
     if (response.data?.token) {
-      localStorage.setItem("token", response.data.token); // ✅ Agora salvamos corretamente o token
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("role", response.data.role); // ✅ Agora salvamos corretamente o token
       return response.data;
     }
 
@@ -19,8 +20,10 @@ export async function login(email: string, password: string) {
     throw new Error(error.response?.data?.message || "Erro ao autenticar");
   }
 }
+
 export function logout() {
   localStorage.removeItem("token");
+  localStorage.removeItem("role");
 }
 
 export function getToken() {
@@ -30,7 +33,10 @@ export function getToken() {
 export async function getUser() {
   try {
     const token = localStorage.getItem("token");
-    if (!token) throw new Error("Usuário não autenticado");
+    if (!token) {
+      console.warn("⚠️ Nenhum token encontrado, retornando null.");
+      return null; // Apenas retorna null sem lançar erro
+    }
 
     const response = await api.get("/auth/me", {
       headers: {
@@ -40,8 +46,7 @@ export async function getUser() {
 
     return response.data;
   } catch (error: any) {
-    console.error("Erro ao buscar usuário:", error.response?.data || error.message);
-    return null;
+    console.error("❌ Erro ao buscar usuário:", error.response?.data || error.message);
+    return null; // Retorna null em vez de lançar um erro
   }
 }
-
