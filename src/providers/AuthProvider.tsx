@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useState, useEffect, ReactNode, useContext } from "react";
-import { useRouter } from "next/navigation"; // ✅ Importa o router
+import { useRouter, usePathname } from "next/navigation";
 import { getUser, login as authLogin, logout as authLogout } from "@/lib/auth";
 
 interface User {
@@ -9,12 +9,13 @@ interface User {
   name: string;
   email: string;
   role: string;
-  streak?: number; // 🔥 Agora streak é opcional
+  streak?: number;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  loading: boolean; // Adicionado para evitar redirecionamentos antes do carregamento
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -22,9 +23,11 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const router = useRouter(); // ✅ Instancie o router
+  const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true); // 🔥 Novo estado para evitar redirecionamentos antes da verificação
 
   useEffect(() => {
     async function loadUser() {
@@ -32,23 +35,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await getUser();
 
         if (userData) {
-          userData.streak = typeof userData.streak === "number" ? userData.streak : null; // 🔥 Evita erro
+          userData.streak = typeof userData.streak === "number" ? userData.streak : null;
           setUser(userData);
           setIsAuthenticated(true);
 
-          // ✅ Redireciona automaticamente para a dashboard correta
-          if (userData.role === "admin") {
-            router.push("/admin");
-          } else {
-            router.push("/dashboard");
+          // ✅ Redireciona usuários somente se eles já estiverem autenticados e não estiverem na tela inicial
+          if (pathname !== "/" && pathname !== "/login") {
+            if (userData.role === "admin") {
+              router.push("/admin");
+            } else {
+              router.push("/dashboard");
+            }
           }
-        } else {
-          console.warn("⚠️ Nenhum usuário carregado, deslogando.");
-          logout();
         }
       } catch (error) {
         console.error("Erro ao carregar usuário:", error);
-        logout();
+        setUser(null);
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false); // 🔥 Agora marcamos o carregamento como finalizado
       }
     }
 
@@ -60,11 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await authLogin(email, password);
       if (data) {
         const userData = await getUser();
-        userData.streak = typeof userData.streak === "number" ? userData.streak : null; // 🔥 Corrige erro de streak
+        userData.streak = typeof userData.streak === "number" ? userData.streak : null;
         setUser(userData);
         setIsAuthenticated(true);
 
-        // ✅ Redireciona para a dashboard correta após login
+        // ✅ Redireciona corretamente após login
         if (userData.role === "admin") {
           router.push("/admin");
         } else {
@@ -81,11 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authLogout();
     setUser(null);
     setIsAuthenticated(false);
-    router.push("/login"); // ✅ Redireciona para login
+    router.push("/login");
   }
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
