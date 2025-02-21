@@ -1,23 +1,23 @@
+"use client";
+
 import { api } from "./api";
+import { AxiosError } from "axios";
 
 export async function login(email: string, password: string) {
   try {
-    console.log("📡 Enviando login para o backend:", email, password); // 🔥 Debug
-
-    const response = await api.post("/auth/login", { email, password });
-
-    console.log("✅ Resposta do backend:", response.data); // 🔥 Debug
-
+    const response = await api.post<{ token: string; role: string }>("/auth/login", { email, password });
+    
     if (response.data?.token) {
       localStorage.setItem("token", response.data.token);
-      localStorage.setItem("role", response.data.role); // ✅ Agora salvamos corretamente o token
+      localStorage.setItem("role", response.data.role);
       return response.data;
     }
 
     throw new Error("Credenciais inválidas");
-  } catch (error: any) {
-    console.error("❌ Erro no login:", error.response?.data || error.message);
-    throw new Error(error.response?.data?.message || "Erro ao autenticar");
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<{ message?: string }>;
+    console.error("❌ Erro no login:", axiosError.response?.data || axiosError.message);
+    throw new Error(axiosError.response?.data?.message || "Erro ao autenticar");
   }
 }
 
@@ -35,18 +35,19 @@ export async function getUser() {
     const token = localStorage.getItem("token");
     if (!token) {
       console.warn("⚠️ Nenhum token encontrado, retornando null.");
-      return null; // Apenas retorna null sem lançar erro
+      return null;
     }
 
     const response = await api.get("/auth/me", {
       headers: {
-        Authorization: `Bearer ${token}`, // ✅ Agora o token será enviado corretamente
+        Authorization: `Bearer ${token}`,
       },
     });
 
     return response.data;
-  } catch (error: any) {
-    console.error("❌ Erro ao buscar usuário:", error.response?.data || error.message);
+  } catch (error) {
+    const axiosError = error as AxiosError<{ message?: string }>;
+    console.error("❌ Erro ao buscar usuário:", axiosError.response?.data || axiosError.message);
     return null; // Retorna null em vez de lançar um erro
   }
 }

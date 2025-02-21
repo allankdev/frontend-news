@@ -27,7 +27,8 @@ export default function LoginPage() {
       await login(email, password);
       const dashboardPath = user?.role === "admin" ? "/admin" : "/dashboard";
       router.push(dashboardPath);
-    } catch (err) {
+    } catch  {
+    
       setError("Credenciais inválidas");
     }
   }

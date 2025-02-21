@@ -80,8 +80,6 @@ JWT_SECRET=super_secret_key
 - **Exibição correta dos badges e ranking**
 - **Responsividade e experiência do usuário**
 
-## 📽 Demonstração
-📌 **https://youtu.be/rob-d3wvmdk?si=nY08d9bQTiyick2o**
 
 ## 🔍 Melhorias Futuras
 - Implementar **notificações push** para lembrar os usuários de abrir a newsletter
