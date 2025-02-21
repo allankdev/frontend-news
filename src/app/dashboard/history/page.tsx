@@ -10,7 +10,7 @@ import dayjs from "dayjs";
 type HistoryItem = { date: Date; title: string };
 
 export default function HistoryPage() {
-  const { user } = useAuth();
+  const {  } = useAuth();
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

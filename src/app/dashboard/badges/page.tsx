@@ -14,7 +14,7 @@ interface Badge {
 }
 
 export default function BadgesPage() {
-  const { user } = useAuth();
+  const {} = useAuth();
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

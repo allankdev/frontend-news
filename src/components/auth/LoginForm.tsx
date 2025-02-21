@@ -32,7 +32,7 @@ export default function LoginForm() {
       } else {
         router.push("/streaks");
       }
-    } catch (err) {
+    } catch {
       setError("Credenciais inválidas!");
     }
   };

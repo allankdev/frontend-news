@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadUser() {
+    const loadUser = async () => {
       try {
         const userData = await getUser();
 
@@ -38,9 +38,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           userData.streak = typeof userData.streak === "number" ? userData.streak : null;
           setUser(userData);
           setIsAuthenticated(true);
-        } else {
-          setUser(null);
-          setIsAuthenticated(false);
+          
+          // 🔥 Corrigido: Só redireciona se o usuário estiver na home ou na página de login
+          const pagesSemRedirecionamento = ["/historico", "/premios"];
+          const isNaTelaDeLoginOuHome = pathname === "/" || pathname === "/login";
+
+          if (isNaTelaDeLoginOuHome) {
+            if (userData.role === "admin") {
+              router.push("/admin");
+            } else {
+              router.push("/dashboard");
+            }
+          } else if (!pagesSemRedirecionamento.includes(pathname)) {
+            router.push(pathname); // Mantém o usuário onde ele está se não for login/home
+          }
         }
       } catch (error) {
         console.error("Erro ao carregar usuário:", error);
@@ -49,22 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } finally {
         setLoading(false);
       }
-    }
+    };
 
     loadUser();
-  }, []); // ✅ Sem dependências desnecessárias
-
-  useEffect(() => {
-    if (!loading && user) {
-      if (pathname !== "/" && pathname !== "/login") {
-        if (user.role === "admin") {
-          router.push("/admin");
-        } else {
-          router.push("/dashboard");
-        }
-      }
-    }
-  }, [pathname, router, loading, user]); // ✅ Corrigido o ESLint (Adicionadas dependências corretas)
+  }, [pathname, router]);
 
   async function login(email: string, password: string) {
     try {
@@ -75,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(userData);
         setIsAuthenticated(true);
 
+        // 🔥 Mantém o usuário na página correta após login
         if (userData.role === "admin") {
           router.push("/admin");
         } else {
