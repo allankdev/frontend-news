@@ -1,89 +1,134 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { motion } from "framer-motion";
+import type React from "react"
+
+import { useState, useEffect } from "react"
+import { useAuth } from "@/hooks/useAuth"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { motion, AnimatePresence } from "framer-motion"
+import { Spinner } from "@/components/ui/spinner"
 
 export default function LoginPage() {
-  const { login, user, isAuthenticated } = useAuth();
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const { login, user, isAuthenticated } = useAuth()
+  const router = useRouter()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const dashboardPath = user.role === "admin" ? "/admin" : "/dashboard";
-      router.push(dashboardPath);
+      const dashboardPath = user.role === "admin" ? "/admin" : "/dashboard"
+      router.push(dashboardPath)
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router])
 
   async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+    event.preventDefault()
+    setIsLoading(true)
     try {
-      await login(email, password);
-      const dashboardPath = user?.role === "admin" ? "/admin" : "/dashboard";
-      router.push(dashboardPath);
-    } catch  {
-    
-      setError("Credenciais inválidas");
+      await login(email, password)
+      const dashboardPath = user?.role === "admin" ? "/admin" : "/dashboard"
+      router.push(dashboardPath)
+    } catch {
+      setError("Credenciais inválidas")
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
+      {/* Adicione o overlay de carregamento aqui */}
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          >
+            <div className="flex flex-col items-center gap-4 rounded-lg bg-white/10 p-8 text-white">
+              <Spinner className="size-12" />
+              <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                Autenticando...
+              </motion.p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white p-8 rounded-xl shadow-lg w-96"
+        className="w-96 space-y-6 rounded-xl bg-white p-8 shadow-lg dark:bg-gray-800"
       >
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-6">🔐 Login</h2>
+        <h2 className="text-center text-3xl font-bold text-gray-900 dark:text-white">🔐 Login</h2>
 
-        {error && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-red-500 text-sm text-center mb-4"
-          >
-            {error}
-          </motion.p>
-        )}
+        <AnimatePresence mode="wait">
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <p className="text-center text-sm text-red-500">{error}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="text-gray-700 font-semibold">📧 Email</label>
+          <div className="space-y-2">
+            <label className="font-medium text-gray-700 dark:text-gray-200">📧 Email</label>
             <Input
               type="email"
               placeholder="Digite seu email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              className="w-full"
+              disabled={isLoading}
             />
           </div>
 
-          <div>
-            <label className="text-gray-700 font-semibold">🔑 Senha</label>
+          <div className="space-y-2">
+            <label className="font-medium text-gray-700 dark:text-gray-200">🔑 Senha</label>
             <Input
               type="password"
               placeholder="Digite sua senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              className="w-full"
+              disabled={isLoading}
             />
           </div>
 
-          <Button
-            type="submit"
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg text-lg font-semibold transition duration-300"
-          >
-            Entrar
+          <Button type="submit" disabled={isLoading} className="relative w-full" size="lg">
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                <motion.div
+                  key="spinner"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                >
+                  <Spinner />
+                </motion.div>
+              ) : (
+                <motion.span key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  Entrar
+                </motion.span>
+              )}
+            </AnimatePresence>
           </Button>
         </form>
       </motion.div>
     </div>
-  );
+  )
 }
+
