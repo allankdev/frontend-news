@@ -1,47 +1,46 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { useAuth } from "@/hooks/useAuth"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { motion, AnimatePresence } from "framer-motion"
-import { Spinner } from "@/components/ui/spinner"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+import { Settings } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function LoginPage() {
-  const { login, user, isAuthenticated } = useAuth()
-  const router = useRouter()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const { login, user, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const dashboardPath = user.role === "admin" ? "/admin" : "/dashboard"
-      router.push(dashboardPath)
+      const dashboardPath = user.role === "admin" ? "/admin" : "/dashboard";
+      router.push(dashboardPath);
     }
-  }, [isAuthenticated, user, router])
+  }, [isAuthenticated, user, router]);
 
   async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
-    setIsLoading(true)
+    event.preventDefault();
+    setIsLoading(true);
     try {
-      await login(email, password)
-      const dashboardPath = user?.role === "admin" ? "/admin" : "/dashboard"
-      router.push(dashboardPath)
+      await login(email, password);
+      const dashboardPath = user?.role === "admin" ? "/admin" : "/dashboard";
+      router.push(dashboardPath);
     } catch {
-      setError("Credenciais inválidas")
+      setError("Credenciais inválidas");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
-      {/* Adicione o overlay de carregamento aqui */}
+      {/* Loading overlay with animated gear */}
       <AnimatePresence>
         {isLoading && (
           <motion.div
@@ -51,8 +50,25 @@ export default function LoginPage() {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
           >
             <div className="flex flex-col items-center gap-4 rounded-lg bg-white/10 p-8 text-white">
-              <Spinner className="size-12" />
-              <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <motion.div
+                initial={{ rotate: 0 }}
+                animate={{ 
+                  rotate: 360,
+                  transition: {
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }
+                }}
+              >
+                <Settings className="size-12 text-white" strokeWidth={1.5} />
+              </motion.div>
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-lg font-medium"
+              >
                 Autenticando...
               </motion.p>
             </div>
@@ -111,16 +127,33 @@ export default function LoginPage() {
             <AnimatePresence mode="wait">
               {isLoading ? (
                 <motion.div
-                  key="spinner"
+                  key="loading"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                  className="flex items-center justify-center gap-2"
                 >
-                  <Spinner />
+                  <motion.div
+                    animate={{ 
+                      rotate: 360,
+                      transition: {
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear"
+                      }
+                    }}
+                  >
+                    <Settings className="size-4" />
+                  </motion.div>
+                  <span>Autenticando...</span>
                 </motion.div>
               ) : (
-                <motion.span key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <motion.span
+                  key="text"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
                   Entrar
                 </motion.span>
               )}
@@ -129,6 +162,5 @@ export default function LoginPage() {
         </form>
       </motion.div>
     </div>
-  )
+  );
 }
-
