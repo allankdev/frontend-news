@@ -24,7 +24,7 @@ O **The News** é uma plataforma de **gamificação para newsletters**, incentiv
 - Badges são concedidos ao atingir **3, 7, 14, 30 dias de streak**
 
 ## 🛠 Tecnologias Utilizadas
-- **Frontend**: Next.js, Tailwind CSS, shadcn/ui, Recharts
+- **Frontend**: React, Next.js, Tailwind CSS, shadcn/ui, Recharts
 - **Backend**: NestJS, Prisma ORM, PostgreSQL
 - **Autenticação**: JWT
 - **Webhook**: Beehiiv API para rastrear aberturas de emails
